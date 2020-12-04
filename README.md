@@ -1,5 +1,11 @@
 # Sythetic-Data-Generation
 
+generateDataset.blend is an empty project to run the script in.
+
+## Instructions
+Open generateDataset.blend in Blender
+
+run the generateDataset.py in the blender folder
 
 ## Sources
 

@@ -1,5 +1,8 @@
+"""
+Utility to visualize bounding box from txt file
+"""
 import cv2
-def display_bounding_box(image_path, coords):
+def save_bounding_box(image_path, coords):
     x, y, width, height = coords
     x_min = x
     y_min = y
@@ -11,4 +14,4 @@ def display_bounding_box(image_path, coords):
 
 if __name__ == "__main__":
     image_path = 'untitled.png'
-    display_bounding_box(image_path, (611, 190, 697, 724))
+    save_bounding_box(image_path, (611, 190, 697, 724))

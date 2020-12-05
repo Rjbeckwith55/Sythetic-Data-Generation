@@ -130,7 +130,7 @@ def place_camera_and_light():
 
 
 def setup_background_image(image_path):
-    # clear default nodes
+    """Put the background image into the scene so that it can be rendered"""
     tree = bpy.context.scene.node_tree
 
     for node in tree.nodes:
@@ -138,6 +138,7 @@ def setup_background_image(image_path):
 
     bpy.context.scene.render.film_transparent = True
 
+    # Create the composite nodes
     img = bpy.data.images.load(image_path)
     image_node = tree.nodes.new("CompositorNodeImage")
     image_node.image = img
@@ -163,11 +164,11 @@ def move_object():
     #bpy.ops.transform.resize(value=(0.5, 0.5, 0.5), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
     #bpy.ops.transform.rotate(value=-1.51653, orient_axis='Z', orient_type='VIEW', orient_matrix=((0.0593085, -0.99824, -2.32214e-06), (0.0278697, 0.00165364, 0.99961), (-0.997851, -0.0592853, 0.0279188)), orient_matrix_type='VIEW', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
     random_coord = (random.random()*1)+1
-    bpy.ops.transform.translate(value=(random_coord,random_coord, random_coord))
+    bpy.ops.transform.translate(value=(0,20,0))
     return random_coord
 
 def render_image(file_path, object_name):
-    # Render Scene
+    """Render the scene to a file"""
     context.scene.render.filepath = file_path
     bpy.ops.render.render(write_still = True)
 
@@ -209,6 +210,7 @@ if __name__ == "__main__":
     background_dir = "Backgrounds/"
     model_dir = "Models/"
     number_of_moves = 10
+    total_image_counter = 0
 
     abs_path = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
     abs_path = abs_path.split('/')
@@ -230,9 +232,11 @@ if __name__ == "__main__":
             for i in range(number_of_moves):
                 move_object()
                 # time.sleep(1)
-                render_image(abs_path + '/' + "test" + str(i) + ".png", object_name)
-                print(i)
+                render_image(abs_path + '/' + "test" + str(total_image_counter) + ".png", object_name)
+                print(total_image_counter)
+                total_image_counter+=1
 
         
 
     cleanup()
+    print(f"DataSet of {total_image_counter} images Generated to {abs_path}")

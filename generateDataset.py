@@ -175,8 +175,8 @@ def move_object(object_name):
     bpy.context.area.type = previous_context
 
     # randomly translate coords
-    random_coord = (random.random()*1)+1
-    bpy.ops.transform.translate(value=(0,20,0))
+    random_coord = random.uniform(-2.0,2.1)
+    bpy.ops.transform.translate(value=(random_coord,20+random_coord,0))
     return random_coord
 
 def render_image(file_path, object_name):

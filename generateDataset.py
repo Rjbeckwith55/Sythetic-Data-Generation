@@ -91,6 +91,7 @@ def add_object(file_path):
     Filename must equal the object name
     """
     # file_path="/Users/alihasson/Documents/UIUC/CS445/Sythetic-Data-Generation/" + file_path.split('/')[-1].split('.')[0]
+    
     inner_path = "Object"
     object_name = file_path.split('/')[-1].split('.')[0]
 
@@ -237,6 +238,7 @@ def cleanup():
     pass
 
 def remove_object(object_name):
+    """Remove object from scene"""
     # Deselect all
     bpy.ops.object.select_all(action='DESELECT')
     bpy.data.objects[object_name].select_set(True)
@@ -247,7 +249,7 @@ if __name__ == "__main__":
     cleanup()
     background_dir = "Backgrounds/"
     model_dir = "Models/"
-    number_of_moves = 2
+    number_of_moves = 10
     total_image_counter = 0
 
     abs_path = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
@@ -264,22 +266,17 @@ if __name__ == "__main__":
     print(model_files_list,background_images_list)
     
     for model_file in model_files_list:
-        cleanup()
-        place_camera_and_light()
-
         object_name = add_object(model_dir + '/' + model_file)
         calibrate_object(object_name)
         for background_file in background_images_list:
             setup_background_image(background_dir + '/' + background_file)
             for i in range(number_of_moves):
                 move_object(object_name)
-                # time.sleep(1)
                 render_image(abs_path + '/' + 'output/' + str(total_image_counter) + ".png", object_name)
                 print(total_image_counter)
                 total_image_counter+=1
         remove_object(object_name)
 
-        
 
     # cleanup()
     print(f"DataSet of {total_image_counter} images Generated to {abs_path}")

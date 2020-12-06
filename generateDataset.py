@@ -232,7 +232,7 @@ if __name__ == "__main__":
             for i in range(number_of_moves):
                 move_object()
                 # time.sleep(1)
-                render_image(abs_path + '/' + "test" + str(total_image_counter) + ".png", object_name)
+                render_image(abs_path + '/' + 'output/' + str(total_image_counter) + ".png", object_name)
                 print(total_image_counter)
                 total_image_counter+=1
 

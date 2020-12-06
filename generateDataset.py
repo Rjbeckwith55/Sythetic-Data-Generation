@@ -156,15 +156,27 @@ def setup_background_image(image_path):
     link2 = links.new(render_layers.outputs[0], alpha_over.inputs[2])
     link3 = links.new(alpha_over.outputs[0], composite.inputs[0])
 
-def move_object():
+def move_object(object_name):
     """Move the object randomly"""
     # Select objects that will be rendered
 
     # bpy.ops.view3d.camera_to_view_selected()
     #bpy.ops.transform.resize(value=(0.5, 0.5, 0.5), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
     #bpy.ops.transform.rotate(value=-1.51653, orient_axis='Z', orient_type='VIEW', orient_matrix=((0.0593085, -0.99824, -2.32214e-06), (0.0278697, 0.00165364, 0.99961), (-0.997851, -0.0592853, 0.0279188)), orient_matrix_type='VIEW', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
-    random_coord = (random.random()*1)+1
-    bpy.ops.transform.translate(value=(0,20,0))
+    
+    # resets object location to origin
+    previous_context = bpy.context.area.type
+    bpy.context.area.type = 'VIEW_3D'
+
+    bpy.ops.view3d.snap_cursor_to_center()
+    bpy.data.objects[object_name].select_set(True)
+    bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+
+    bpy.context.area.type = previous_context
+
+    # randomly translate coords
+    random_coord = random.uniform(-2.0,2.1)
+    bpy.ops.transform.translate(value=(random_coord,20+random_coord,0))
     return random_coord
 
 def render_image(file_path, object_name):
@@ -230,7 +242,7 @@ if __name__ == "__main__":
         for background_file in background_images_list:
             setup_background_image(background_dir + '/' + background_file)
             for i in range(number_of_moves):
-                move_object()
+                move_object(object_name)
                 # time.sleep(1)
                 render_image(abs_path + '/' + 'output/' + str(total_image_counter) + ".png", object_name)
                 print(total_image_counter)

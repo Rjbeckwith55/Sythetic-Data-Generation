@@ -87,6 +87,7 @@ def camera_view_bounds_2d(scene, camera_object, mesh_object):
 
 def add_object(file_path): 
     """
+    Add blender object to the scene
     Filename must equal the object name
     """
     # file_path="/Users/alihasson/Documents/UIUC/CS445/Sythetic-Data-Generation/" + file_path.split('/')[-1].split('.')[0]
@@ -98,6 +99,16 @@ def add_object(file_path):
         directory=os.path.join(file_path, inner_path),
         filename=object_name
     )
+
+    previous_context = bpy.context.area.type
+    bpy.context.area.type = 'VIEW_3D'
+
+    bpy.ops.view3d.snap_cursor_to_center()    
+    bpy.data.objects[object_name].select_set(True)
+    bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
+
+    bpy.context.area.type = previous_context
+
     return object_name
     
 def place_camera_and_light():
@@ -106,7 +117,7 @@ def place_camera_and_light():
     bpy.context.scene.use_nodes = True
     camera = bpy.data.cameras.new("Camera")
     camera_obj = bpy.data.objects.new("Camera", camera)
-    camera_obj.location = (0,0,0)
+    camera_obj.location = (0,-200,0)
     camera_obj.rotation_euler = (radians(90),0,0)
     bpy.context.scene.camera = camera_obj
     bpy.context.scene.collection.objects.link(camera_obj)
@@ -168,7 +179,9 @@ def move_object(object_name):
     previous_context = bpy.context.area.type
     bpy.context.area.type = 'VIEW_3D'
 
-    bpy.ops.view3d.snap_cursor_to_center()
+    bpy.ops.view3d.snap_cursor_to_center()    
+    
+
     bpy.data.objects[object_name].select_set(True)
     bpy.ops.view3d.snap_selected_to_cursor(use_offset=False)
 
@@ -177,7 +190,28 @@ def move_object(object_name):
     # randomly translate coords
     random_coord = random.uniform(-2.0,2.1)
     bpy.ops.transform.translate(value=(random_coord,20+random_coord,0))
+    bpy.data.objects[object_name].rotation_euler = (0,0,0)
     return random_coord
+
+def calibrate_object(object_name):
+    coords = camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects[object_name])
+    CAMERA_COORD = 600
+    
+    while (coords[2] >= .8*CAMERA_COORD):
+        bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
+        coords = camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects[object_name])
+    while (coords[3] >= .8*CAMERA_COORD):
+        bpy.ops.transform.resize(value=(0.5, 0.5, 0.5))
+        coords = camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects[object_name])
+    
+    while(coords[2] < .2*CAMERA_COORD):
+        bpy.ops.transform.resize(value=(1.3, 1.3, 1.3))
+        coords = camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects[object_name])
+    
+    while(coords[3] < .2*CAMERA_COORD):
+        bpy.ops.transform.resize(value=(1.3, 1.3, 1.3))
+        coords = camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects[object_name])
+    
 
 def render_image(file_path, object_name):
     """Render the scene to a file"""
@@ -190,19 +224,6 @@ def render_image(file_path, object_name):
             f.write(str(coord))
             if(i!=3):
                 f.write(',')
-    
-
-def save_bounding_box_viz(image_path, coords):
-    """Save the visualized bounding box image to file"""
-    x, y, width, height = coords
-    x_min = x
-    y_min = y
-    x_max = x+width
-    y_max = y+height
-    image = cv2.imread(image_path)
-    box_image = cv2.rectangle(image,(x_min,y_min),(x_max,y_max),(0,255,0),2)
-    cv2.imwrite("blender_image_visualized.png", box_image)
-
 
 def cleanup():
     """ 
@@ -215,13 +236,18 @@ def cleanup():
     bpy.ops.object.delete()
     pass
 
+def remove_object(object_name):
+    # Deselect all
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.data.objects[object_name].select_set(True)
+    bpy.ops.object.delete() 
+
+
 if __name__ == "__main__":
     cleanup()
-    # save_bounding_box(image_path, (611, 190, 697, 724))
-    # camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects['Cube'])
     background_dir = "Backgrounds/"
     model_dir = "Models/"
-    number_of_moves = 10
+    number_of_moves = 2
     total_image_counter = 0
 
     abs_path = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
@@ -238,7 +264,11 @@ if __name__ == "__main__":
     print(model_files_list,background_images_list)
     
     for model_file in model_files_list:
+        cleanup()
+        place_camera_and_light()
+
         object_name = add_object(model_dir + '/' + model_file)
+        calibrate_object(object_name)
         for background_file in background_images_list:
             setup_background_image(background_dir + '/' + background_file)
             for i in range(number_of_moves):
@@ -247,8 +277,9 @@ if __name__ == "__main__":
                 render_image(abs_path + '/' + 'output/' + str(total_image_counter) + ".png", object_name)
                 print(total_image_counter)
                 total_image_counter+=1
+        remove_object(object_name)
 
         
 
-    cleanup()
+    # cleanup()
     print(f"DataSet of {total_image_counter} images Generated to {abs_path}")

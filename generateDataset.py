@@ -190,8 +190,9 @@ def move_object(object_name):
 
     # randomly translate coords
     random_coord = random.uniform(-2.0,2.1)
+    rand_ang = random.randint(0,90)
     bpy.ops.transform.translate(value=(random_coord,20+random_coord,0))
-    bpy.data.objects[object_name].rotation_euler = (0,0,0)
+    bpy.data.objects[object_name].rotation_euler = (0,0,rand_ang)
     return random_coord
 
 def calibrate_object(object_name):

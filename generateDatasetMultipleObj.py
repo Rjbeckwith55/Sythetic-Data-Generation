@@ -6,6 +6,8 @@ import time
 
 context = bpy.context
 
+CAMERA_COORD = 600
+
 def clamp(x, minimum, maximum):
     return max(minimum, min(x, maximum))
 
@@ -150,7 +152,7 @@ def setup_background_image(image_path):
 
     bpy.context.scene.render.film_transparent = True
 
-    # Create the composite nodes
+    # Create the composite nodes to overlay object and background
     img = bpy.data.images.load(image_path)
     image_node = tree.nodes.new("CompositorNodeImage")
     image_node.image = img
@@ -159,14 +161,34 @@ def setup_background_image(image_path):
     render_layers.location = 150,-250
     alpha_over = tree.nodes.new("CompositorNodeAlphaOver")
     alpha_over.location = 400,0
+
+    # Create Nodes for random effects to the image
+    bright_contrast = tree.nodes.new("CompositorNodeBrightContrast")
+    bright_contrast.inputs['Bright'].default_value = 20.0
+    bright_contrast.inputs['Contrast'].default_value = 20.0
+    bright_contrast.location = 600,0
+
+    lens_distortion = tree.nodes.new("CompositorNodeLensdist")
+    lens_distortion.inputs['Distort'].default_value = 0.0
+    lens_distortion.inputs['Dispersion'].default_value = 0.2 
+    lens_distortion.location = 800,0
+
+    glare = tree.nodes.new("CompositorNodeGlare")
+    glare.location = 1000,0
+
+
+    # Final Connecting node
     composite = tree.nodes.new("CompositorNodeComposite")
-    composite.location = 600,0
+    composite.location = 1200,0
 
     # Link the composite tree
     links = tree.links
     link = links.new(image_node.outputs[0], alpha_over.inputs[1])
     link2 = links.new(render_layers.outputs[0], alpha_over.inputs[2])
-    link3 = links.new(alpha_over.outputs[0], composite.inputs[0])
+    link3 = links.new(alpha_over.outputs[0], bright_contrast.inputs[0])
+    link4 = links.new(bright_contrast.outputs[0], lens_distortion.inputs[0])
+    link6 = links.new(lens_distortion.outputs[0], glare.inputs[0])
+    link5 = links.new(glare.outputs[0], composite.inputs[0])
 
 def move_object(object_name, dist_obj=(0,0,0,0)):
     """Move the object randomly"""
@@ -190,9 +212,9 @@ def move_object(object_name, dist_obj=(0,0,0,0)):
     bpy.context.area.type = previous_context
 
     # randomly translate coords
-    random_coordx = random.uniform(-40,40)
-    random_coordy = random.uniform(-40,40)
-    random_coordz = random.uniform(-20,20)
+    random_coordx = random.uniform(-50,50)
+    random_coordy = random.uniform(-50,50)
+    random_coordz = random.uniform(-30,30)
     distance_coord = random.uniform(30,200)
     rand_ang = random.randint(0,90)
 
@@ -205,7 +227,6 @@ def move_object(object_name, dist_obj=(0,0,0,0)):
 
     return (random_coordx, distance_coord + random_coordy, random_coordz, rand_ang)
 
-CAMERA_COORD = 600
     
 def calibrate_object(object_name):
     coords = camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects[object_name])
@@ -225,21 +246,36 @@ def calibrate_object(object_name):
     while(coords[3] < .2*CAMERA_COORD):
         bpy.ops.transform.resize(value=(1.3, 1.3, 1.3))
         coords = camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects[object_name])
-    
+
+def random_noise():
+    """Randomly set the values of the nodes that modify brightness and distortion effects"""
+    tree = bpy.context.scene.node_tree
+    for node in tree.nodes:
+        if node.type == "BRIGHTCONTRAST":
+            node.inputs['Bright'].default_value = (random.random() - .5) * 10
+            node.inputs['Contrast'].default_value = (random.random() - .5) * 10
+        elif node.type == "LENSDIST":
+            node.inputs['Dispersion'].default_value = random.random()/10.0
+            
 
 def render_image(file_path, object_name):
     """Render the scene to a file"""
+    random_noise()
     bpy.context.scene.render.resolution_x = CAMERA_COORD
     bpy.context.scene.render.resolution_y = CAMERA_COORD
     context.scene.render.filepath = file_path
     bpy.ops.render.render(write_still = True)
-    
-    coords = camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects[object_name])
+
+    coords = []
+    for obj in rendered_objects: 
+        coords.append(camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects[obj]))
     with open(file_path.replace(".png",".txt"),'w+') as f:
-        for i,coord in enumerate(coords):
-            f.write(str(coord))
-            if(i!=3):
-                f.write(',')
+        for coord in coords:
+            for i,val in enumerate(coord):
+                f.write(str(val))
+                if(i!=3):
+                    f.write(',')
+            f.write('\n')
 
 def cleanup():
     """ 
@@ -264,7 +300,7 @@ if __name__ == "__main__":
     background_dir = "Backgrounds/"
     model_dir = "Models/"
     number_of_moves = 5
-    num_objects = 2
+
     total_image_counter = 0
 
     abs_path = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')
@@ -279,41 +315,38 @@ if __name__ == "__main__":
     background_images_list = os.listdir(background_dir)
     place_camera_and_light()
     print(model_files_list,background_images_list)
-    model_files_list.remove('.DS_Store')
-    
-    i = 0
-    for model_file in model_files_list:
-        rendered_objects = []
-        print(model_file)
-        
-        if (num_objects > 1):
-            model_files_list.remove(model_file)
-            for i in range(num_objects-1):
-                rand_obj = random.choice(model_files_list)
-                object_name1 = add_object(model_dir + '/' + rand_obj)
-                calibrate_object(object_name1)
-                rendered_objects.append(object_name1)
-            model_files_list.insert(i, model_file)
 
-        object_name = add_object(model_dir + '/' + model_file)
-        calibrate_object(object_name)
-        rendered_objects.append(object_name)
-        
-        for background_file in background_images_list:
-            setup_background_image(background_dir + '/' + background_file)
-            for i in range(number_of_moves):
-                dist = [0,0,0,0]
-                for obj in rendered_objects:
-                    dist = move_object(obj, dist_obj=dist)
-                # time.sleep(1)
-                render_image(abs_path + '/' + 'output/' + str(total_image_counter) + ".png", object_name)
-                print(total_image_counter)
-                total_image_counter+=1
+    try:
+        model_files_list.remove('.DS_Store')
+    except:
+        pass
 
-        for obj in rendered_objects:
-            remove_object(obj)
-        i+=1
+    for background_file in background_images_list:
+        setup_background_image(background_dir + '/' + background_file)
+        for i in range(number_of_moves):
+            num_objects = random.randint(1,len(model_files_list))
+            rendered_objects = []
+
+            # add random number of objects
+            objects = random.sample(model_files_list, num_objects)
+            for rand_obj in objects:
+                # rand_obj = random.sample(model_files_list)
+                object_name = add_object(model_dir + '/' + rand_obj)
+                calibrate_object(object_name)
+                rendered_objects.append(object_name)
+
+            # move objects inside blender
+            dist = [0,0,0,0]
+            for obj in rendered_objects:
+                dist = move_object(obj, dist_obj=dist)
+
+            render_image(abs_path + '/' + 'output/' + str(total_image_counter) + ".png", rendered_objects)
+            print(total_image_counter)
+            total_image_counter+=1
+
+            for obj in rendered_objects:
+                remove_object(obj)
 
 
     # cleanup()
-    print(f"DataSet of {total_image_counter} images Generated to {abs_path}")
+    print(f"DataSet of {total_image_counter} images Generated to {abs_path}"+ '/' + 'output/')

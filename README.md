@@ -1,25 +1,27 @@
 # Sythetic-Data-Generation
 
-generateDataset.blend is an empty project to run the script in.
+This project has a gitsubmodule to for seam-carving make sure to clone the submodule properly if you would like to resize your backgroud images
 
 ## Instructions
-Populate the Backgrounds/ and Models/ directory with your own assets.
+generateDataset.blend is an empty project to run the script in.
 
-The Models must have the same object name as the File itself.
+Populate the Backgrounds/ and Models/ directory with your own assets or use the provided example assets.
 
-The background images must all be the same size. 600 x 600. 
+The models within the Models/ directory must have the same object name as the file itself.
 
-We provide the utility resize_images.py to make all the images the same size.
-
-The SHOULD_DOWNSIZE = False must be set in the seam_carving.py file
-
-This utility uses seam carving to resize the images. (It taks a long time to run)
+The background images must all be the same size. 600 x 600. If they are not we provide the utility resize_images.py to make all the images the same size. If usint this utility make sure SHOULD_DOWNSIZE = False is set in the seam_carving.py file. This resizing method will take a long time to run.
   
 Open generateDataset.blend in Blender
 
-Run the generateDataset.py from Blender.
+Run the generateDataset.py from Blender using the scripting tab in the generateDataset.blend project.
+
+After running the script, see results in the output/ directory.
+
+To visualize the results of the bounding boxes run display_image.py
 
 ## Sources
+
+https://github.com/andrewdcampbell/seam-carving
 
 https://blender.stackexchange.com/questions/7198/save-the-2d-bounding-box-of-an-object-in-rendered-image-to-a-text-file
 

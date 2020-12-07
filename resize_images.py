@@ -1,4 +1,4 @@
-"""Utility reads the Backgrounds directory and resizes them to be the set size of 600 x 600 expected from the tool"""
+"""Utility reads the Backgrounds/ directory and resizes them to be the set size of 600 x 600 expected from the tool"""
 import subprocess
 import os
 import cv2

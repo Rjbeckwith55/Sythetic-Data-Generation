@@ -22,3 +22,10 @@ Run the generateDataset.py from Blender.
 ## Sources
 
 https://blender.stackexchange.com/questions/7198/save-the-2d-bounding-box-of-an-object-in-rendered-image-to-a-text-file
+
+Image Credit:
+https://libreshot.com/wp-content/uploads/2019/12/foggy-road.jpg
+https://libreshot.com/wp-content/uploads/2018/12/road.jpg
+https://upload.wikimedia.org/wikipedia/commons/b/bb/Silaanyo_road%2C_habarjeclo_Road..jpg
+https://upload.wikimedia.org/wikipedia/commons/6/6b/Road_in_Norway.jpg
+

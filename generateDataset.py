@@ -150,7 +150,7 @@ def setup_background_image(image_path):
 
     bpy.context.scene.render.film_transparent = True
 
-    # Create the composite nodes
+    # Create the composite nodes to overlay object and background
     img = bpy.data.images.load(image_path)
     image_node = tree.nodes.new("CompositorNodeImage")
     image_node.image = img
@@ -159,14 +159,36 @@ def setup_background_image(image_path):
     render_layers.location = 150,-250
     alpha_over = tree.nodes.new("CompositorNodeAlphaOver")
     alpha_over.location = 400,0
+
+    # Create Nodes for random effects to the image
+    bright_contrast = tree.nodes.new("CompositorNodeBrightContrast")
+    bright_contrast.inputs['Bright'].default_value = 20.0
+    bright_contrast.inputs['Contrast'].default_value = 20.0
+    bright_contrast.location = 600,0
+
+    lens_distortion = tree.nodes.new("CompositorNodeLensdist")
+    lens_distortion.inputs['Distort'].default_value = 0.0
+    lens_distortion.inputs['Dispersion'].default_value = 0.2 
+    lens_distortion.location = 800,0
+
+    glare = tree.nodes.new("CompositorNodeGlare")
+    glare.location = 1000,0
+
+
+    # Final Connecting node
     composite = tree.nodes.new("CompositorNodeComposite")
-    composite.location = 600,0
+    composite.location = 1200,0
 
     # Link the composite tree
     links = tree.links
     link = links.new(image_node.outputs[0], alpha_over.inputs[1])
     link2 = links.new(render_layers.outputs[0], alpha_over.inputs[2])
-    link3 = links.new(alpha_over.outputs[0], composite.inputs[0])
+    link3 = links.new(alpha_over.outputs[0], bright_contrast.inputs[0])
+    link4 = links.new(bright_contrast.outputs[0], lens_distortion.inputs[0])
+    link6 = links.new(lens_distortion.outputs[0], glare.inputs[0])
+    link5 = links.new(glare.outputs[0], composite.inputs[0])
+
+
 
 def move_object(object_name):
     """Move the object randomly"""
@@ -215,8 +237,20 @@ def calibrate_object(object_name):
         coords = camera_view_bounds_2d(context.scene, context.scene.camera, bpy.data.objects[object_name])
     
 
+def random_noise():
+    """Randomly set the values of the nodes that modify brightness and distortion effects"""
+    tree = bpy.context.scene.node_tree
+    for node in tree.nodes:
+        if node.type == "BRIGHTCONTRAST":
+            node.inputs['Bright'].default_value = (random.random() - .5) * 20
+            node.inputs['Contrast'].default_value = (random.random() - .5) * 20
+        elif node.type == "LENSDIST":
+            node.inputs['Dispersion'].default_value = random.random()/10.0
+            
+
 def render_image(file_path, object_name):
     """Render the scene to a file"""
+    random_noise()
     context.scene.render.filepath = file_path
     bpy.ops.render.render(write_still = True)
 
@@ -250,7 +284,7 @@ if __name__ == "__main__":
     cleanup()
     background_dir = "Backgrounds/"
     model_dir = "Models/"
-    number_of_moves = 10
+    number_of_moves = 2
     total_image_counter = 0
 
     abs_path = os.path.dirname(os.path.abspath(__file__)).replace('\\','/')

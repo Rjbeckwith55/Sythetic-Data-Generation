@@ -21,8 +21,7 @@ def do_seam_carving(resized, img_path):
     
     assert dy is not None and dx is not None
     output = sc.seam_carve(resized, dy, dx, None, True)
-    cv2.imwrite("test2.png", output)
-    # subprocess.call(['python','seam_carving/seam_carving.py', '-resize', '-im', f'{img_path}', f'-out',f'{"test.png"}', f'-dy',f'{}', '-hremove', '-vis'])
+    cv2.imwrite(img_path, output)
 
 
 if __name__ == "__main__": 

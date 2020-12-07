@@ -1,7 +1,7 @@
 """
 Utility to visualize bounding box from txt file
 """
-import cv2
+import imgaug
 import os
 def save_bounding_box(image_path, box_path):
     output_name = image_path.split('.')[0] + '_viz' + '.png'

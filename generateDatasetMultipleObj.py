@@ -212,11 +212,11 @@ def move_object(object_name, dist_obj=(0,0,0,0)):
     bpy.context.area.type = previous_context
 
     # randomly translate coords
-    random_coordx = random.uniform(-50,50)
-    random_coordy = random.uniform(-50,50)
-    random_coordz = random.uniform(-30,30)
-    distance_coord = random.uniform(30,200)
-    rand_ang = random.randint(0,90)
+    random_coordx = random.uniform(-100,100)
+    random_coordy = random.uniform(-30,30)
+    random_coordz = random.uniform(-100,100)
+    distance_coord = random.uniform(40,200)
+    rand_ang = random.randint(0,180)
 
     print("dist is ", dist_obj)
     bpy.ops.transform.translate(value=(-dist_obj[0]+random_coordx,dist_obj[1]*2+distance_coord+random_coordy,-dist_obj[2]+random_coordz))
